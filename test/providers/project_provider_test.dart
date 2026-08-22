@@ -4,11 +4,10 @@ import 'package:task_flow/data/repositories/project_repository.dart';
 import 'package:task_flow/models/project_model.dart';
 import 'package:task_flow/models/user_model.dart';
 import 'package:task_flow/provider/project_provider.dart';
-
+import '../../lib/models/api_errors.dart';
+import '../../lib/service/auth_service.dart';
+import '../../lib/provider/auth_provider.dart';
 import '../helpers/fakes.dart';
-import '../models/api_errors.dart';
-import '../service/auth_service.dart';
-import 'auth_provider.dart';
 
 class _OkRepo implements ProjectRepository {
   _OkRepo(this._list);

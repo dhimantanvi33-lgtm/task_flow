@@ -8,6 +8,8 @@ import '../../models/organization_model.dart';
 import '../../models/project_model.dart';
 import '../../models/task_model.dart';
 import '../../models/user_model.dart';
+import '../../service/connectivity_service.dart';
+import '../../service/mock_error_service.dart';
 
 abstract class TaskFlowDataSource {
   Future<void> load();
@@ -38,9 +40,11 @@ abstract class TaskFlowDataSource {
   Future<TaskModel> updateTask(TaskModel task);
   Future<void> removeTask(String taskId);
 }
-
 class MockDataSource implements TaskFlowDataSource {
-  MockDataSource({this.artificialDelay = true});
+  MockDataSource(this._connectivity, this._errors, {this.artificialDelay = true});
+
+  final ConnectivityService _connectivity;
+  final MockErrorService _errors;
 
   final bool artificialDelay;
 
@@ -51,8 +55,8 @@ class MockDataSource implements TaskFlowDataSource {
   final List<OrganizationModel> _orgs = [];
   final List<UserModel> _users = [];
   final List<_Membership> _members = [];
-  final List<ProjectModel> _projects = [];
-  final List<TaskModel> _tasks = [];
+  final List<ProjectModel> _projects = []; // raw (no counts)
+  final List<TaskModel> _tasks = []; // raw (no joins)
   final List<CommentModel> _comments = [];
   Map<String, dynamic> _authMock = {};
 
@@ -160,6 +164,7 @@ class MockDataSource implements TaskFlowDataSource {
 
   @override
   Future<ProjectModel> project(String projectId) async {
+    _errors.checkProjectId(projectId);
     await _gate();
     return _hydrateProject(_findProject(projectId));
   }
@@ -212,13 +217,14 @@ class MockDataSource implements TaskFlowDataSource {
 
   @override
   Future<TaskModel> task(String taskId) async {
-    if (taskId == 'task-404') throw const ApiException.notFound('Task not found (simulated).');
+    _errors.checkTaskId(taskId);
     await _gate();
     return _hydrateTask(_findTask(taskId));
   }
 
   @override
   Future<TaskModel> addTask(TaskModel task) async {
+    _errors.checkTaskContent(task.title);
     await _gate(write: true);
     final id = task.id.isEmpty ? _newId('task') : task.id;
     _tasks.add(TaskModel(
@@ -300,6 +306,10 @@ class MockDataSource implements TaskFlowDataSource {
 
   Future<void> _gate({bool write = false}) async {
     await _ensure();
+    if (_connectivity.isOffline) {
+      throw const ApiException.offline();
+    }
+    _errors.maybeThrow();
     if (artificialDelay) {
       await Future.delayed(Duration(milliseconds: 300 + _rng.nextInt(500)));
     }

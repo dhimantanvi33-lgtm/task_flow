@@ -5,6 +5,9 @@ import 'package:task_flow/provider/connectivity_provider.dart';
 import 'package:task_flow/screens/auth/splash_screen.dart';
 import 'package:task_flow/screens/tasks/task_details_screen.dart';
 import 'package:task_flow/service/auth_service.dart';
+import 'package:task_flow/service/connectivity_service.dart';
+import 'package:task_flow/service/mock_error_service.dart';
+
 import 'core/theme/app_theme.dart';
 import 'data/data_source/local_storage_data_source.dart';
 import 'data/data_source/mock_data_source.dart';
@@ -31,12 +34,14 @@ class TaskFlowApp extends StatefulWidget {
 }
 
 class _TaskFlowAppState extends State<TaskFlowApp> {
-  late final MockDataSource _ds = MockDataSource();
+  late final ConnectivityService _connectivity = ConnectivityService();
+  late final MockErrorService _errors = MockErrorService();
+  late final MockDataSource _ds = MockDataSource(_connectivity, _errors);
   late final LocalStorageDataSource _storage = LocalStorageDataSource();
   late final AuthRepository _authRepo = AuthRepositoryImpl(_ds);
   late final AuthService _authService = AuthService(_authRepo, _storage);
-  late final ProjectRepository _projectRepo = ProjectRepositoryImpl(_ds);
-  late final TaskRepository _taskRepo = TaskRepositoryImpl(_ds);
+  late final ProjectRepository _projectRepo = ProjectRepositoryImpl(_ds, _storage);
+  late final TaskRepository _taskRepo = TaskRepositoryImpl(_ds, _storage);
 
   @override
   Widget build(BuildContext context) {
@@ -48,8 +53,9 @@ class _TaskFlowAppState extends State<TaskFlowApp> {
         Provider<AuthService>.value(value: _authService),
         Provider<ProjectRepository>.value(value: _projectRepo),
         Provider<TaskRepository>.value(value: _taskRepo),
+        Provider<MockErrorService>.value(value: _errors),
         ChangeNotifierProvider<AuthProvider>(create: (_) => AuthProvider(_authService)),
-        ChangeNotifierProvider<ConnectivityProvider>(create: (_) => ConnectivityProvider()),
+        ChangeNotifierProvider<ConnectivityProvider>(create: (_) => ConnectivityProvider(_connectivity)),
       ],
       child: MaterialApp(
         title: 'TaskFlow',

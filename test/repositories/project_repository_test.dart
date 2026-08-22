@@ -1,9 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:task_flow/data/repositories/project_repository_impl.dart';
 import 'package:task_flow/models/project_model.dart';
-
-import '../../helpers/fakes.dart';
-import '../../models/api_errors.dart';
+import '../../lib/models/api_errors.dart';
+import '../helpers/fakes.dart';
 
 void main() {
   ProjectRepositoryImpl build({List<ProjectModel>? projects}) =>
