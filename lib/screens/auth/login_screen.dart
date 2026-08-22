@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/validators.dart';
+import '../../provider/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -22,15 +25,23 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate()) return;
-    Navigator.of(context).pushReplacementNamed('/home'); // UI-only
+    final auth = context.read<AuthProvider>();
+    final ok = await auth.login(_email.text, _password.text);
+    if (!mounted) return;
+    if (ok) {
+      Navigator.of(context).pushReplacementNamed('/home');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(auth.errorMessage ?? 'Login failed')));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = ColorManager.of(context);
+    final submitting = context.watch<AuthProvider>().submitting;
     return Scaffold(
       backgroundColor: colors.background,
       body: SafeArea(
@@ -61,15 +72,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: _password, label: 'Password', icon: Icons.lock_outline_rounded, obscure: _obscure, textInputAction: TextInputAction.done, onSubmitted: (_) => _submit(), validator: Validators.password,
                       trailing: IconButton(icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: colors.textHint), onPressed: () => setState(() => _obscure = !_obscure)),
                     ),
-                    const SizedBox(height: 8),
-                    Align(alignment: Alignment.centerRight, child: TextButton(onPressed: () {}, child: Text('Forgot password?', style: AppTextStyles.link(context)))),
-                    const SizedBox(height: 12),
-                    _PrimaryButton(label: 'Sign in', onPressed: _submit),
+                    const SizedBox(height: 20),
+                    _PrimaryButton(label: 'Sign in', loading: submitting, onPressed: _submit),
                     const SizedBox(height: 20),
                     Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                       Text("Don't have an account?", style: AppTextStyles.bodySecondary(context)),
                       TextButton(onPressed: () => Navigator.of(context).pushNamed('/register'), child: Text('Register', style: AppTextStyles.link(context))),
                     ]),
+                    const SizedBox(height: 8),
+                    const _CredentialHint(),
                   ],
                 ),
               ),
@@ -81,7 +92,26 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-// Local UI helpers (shared by login/register). Extract to a common widget later.
+class _CredentialHint extends StatelessWidget {
+  const _CredentialHint();
+  @override
+  Widget build(BuildContext context) {
+    final colors = ColorManager.of(context);
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: colors.card, borderRadius: BorderRadius.circular(12), border: Border.all(color: colors.border)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text('Test logins (password: Password123!)', style: AppTextStyles.caption(context).copyWith(fontWeight: FontWeight.w600)),
+        const SizedBox(height: 4),
+        Text('ava.admin@nimbusdigital.test — Org A admin', style: AppTextStyles.caption(context)),
+        Text('marcus.member@nimbusdigital.test — Org A member', style: AppTextStyles.caption(context)),
+        Text('daniel.admin@harborlightstudios.test — Org B admin', style: AppTextStyles.caption(context)),
+        Text('elena.member@harborlightstudios.test — Org B member', style: AppTextStyles.caption(context)),
+      ]),
+    );
+  }
+}
+
 class _AuthField extends StatelessWidget {
   final TextEditingController controller;
   final String label;
@@ -94,7 +124,6 @@ class _AuthField extends StatelessWidget {
   final ValueChanged<String>? onSubmitted;
   final Widget? trailing;
   const _AuthField({required this.controller, required this.label, required this.icon, this.hint, this.obscure = false, this.keyboardType, this.textInputAction, this.validator, this.onSubmitted, this.trailing});
-
   @override
   Widget build(BuildContext context) {
     final colors = ColorManager.of(context);
@@ -116,17 +145,20 @@ class _AuthField extends StatelessWidget {
 
 class _PrimaryButton extends StatelessWidget {
   final String label;
+  final bool loading;
   final VoidCallback onPressed;
-  const _PrimaryButton({required this.label, required this.onPressed});
+  const _PrimaryButton({required this.label, required this.onPressed, this.loading = false});
   @override
   Widget build(BuildContext context) {
     final colors = ColorManager.of(context);
     return SizedBox(
       height: 52,
       child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(backgroundColor: colors.primary, foregroundColor: Colors.white, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
-        child: Text(label, style: AppTextStyles.button(context)),
+        onPressed: loading ? null : onPressed,
+        style: ElevatedButton.styleFrom(backgroundColor: colors.primary, foregroundColor: Colors.white, disabledBackgroundColor: colors.primary.withValues(alpha: 0.5), elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+        child: loading
+            ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white))
+            : Text(label, style: AppTextStyles.button(context)),
       ),
     );
   }

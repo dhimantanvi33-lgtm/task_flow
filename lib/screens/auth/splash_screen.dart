@@ -1,7 +1,9 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../provider/auth_provider.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -10,19 +12,19 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  Timer? _timer;
   @override
   void initState() {
     super.initState();
-    _timer = Timer(const Duration(milliseconds: 1800), () {
-      if (mounted) Navigator.of(context).pushReplacementNamed('/login');
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _boot());
   }
 
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
+  Future<void> _boot() async {
+    final auth = context.read<AuthProvider>();
+    await Future.delayed(const Duration(milliseconds: 700));
+    await auth.bootstrap();
+    if (!mounted) return;
+    final route = auth.status == AuthStatus.authenticated ? '/home' : '/login';
+    Navigator.of(context).pushReplacementNamed(route);
   }
 
   @override

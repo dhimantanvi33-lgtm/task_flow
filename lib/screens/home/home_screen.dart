@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:task_flow/models/user_model.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../models/project_model.dart';
 import '../../models/task_model.dart';
-import '../../models/user_model.dart';
+import '../../provider/auth_provider.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import '../../widgets/project_card.dart';
 import '../../widgets/task_card.dart';
@@ -57,7 +60,13 @@ class _DashboardTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = ColorManager.of(context);
-    final user = UserModel.sampleAdmin;
+    final auth = context.watch<AuthProvider>();
+    final user = auth.currentUser;
+    final displayName = user?.name ?? 'there';
+    final initials = user?.initials ?? '?';
+    final roleLabel = user?.role.label ?? '';
+    final org = auth.orgName ?? '';
+
     final projects = ProjectModel.samples;
     final tasks = TaskModel.samples;
     final today = tasks.where((t) => t.dueDate != null && t.dueDate!.day == DateTime.now().day).toList();
@@ -73,12 +82,12 @@ class _DashboardTab extends StatelessWidget {
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(_greeting, style: AppTextStyles.bodySecondary(context)),
                   const SizedBox(height: 4),
-                  Text(user.name, style: AppTextStyles.heading1(context)),
+                  Text(displayName, style: AppTextStyles.heading1(context)),
                   const SizedBox(height: 6),
                   Row(children: [
                     Icon(Icons.business_outlined, size: 14, color: colors.textHint),
                     const SizedBox(width: 4),
-                    Text('Acme Corp · ${user.role.label}', style: AppTextStyles.caption(context)),
+                    Flexible(child: Text(roleLabel.isEmpty ? org : '$org · $roleLabel', style: AppTextStyles.caption(context), overflow: TextOverflow.ellipsis)),
                   ]),
                 ]),
               ),
@@ -86,7 +95,7 @@ class _DashboardTab extends StatelessWidget {
                 width: 44, height: 44,
                 decoration: BoxDecoration(gradient: LinearGradient(colors: [colors.primary, colors.primaryLight]), shape: BoxShape.circle),
                 alignment: Alignment.center,
-                child: Text(user.initials, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
+                child: Text(initials, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
               ),
             ]),
             const SizedBox(height: 24),
@@ -139,13 +148,20 @@ class _StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = ColorManager.of(context);
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(color: colors.card, borderRadius: BorderRadius.circular(16), border: Border.all(color: colors.border)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Container(width: 34, height: 34, decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)), alignment: Alignment.center, child: Icon(icon, color: color, size: 18)),
         const Spacer(),
-        Text(value, style: AppTextStyles.heading2(context)),
-        Text(label, style: AppTextStyles.caption(context)),
+        Row(
+          spacing: 3,
+          children: [
+            Text(value, style: AppTextStyles.heading2(context)),
+
+            Text(label, style: AppTextStyles.caption(context)),
+          ],
+        ),
+
       ]),
     );
   }
@@ -156,7 +172,9 @@ class _ProfileTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = ColorManager.of(context);
-    final user = UserModel.sampleAdmin;
+    final auth = context.watch<AuthProvider>();
+    final user = auth.currentUser;
+
     return Scaffold(
       backgroundColor: colors.background,
       appBar: AppBar(title: const Text('Profile')),
@@ -167,23 +185,27 @@ class _ProfileTab extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(color: colors.card, borderRadius: BorderRadius.circular(16), border: Border.all(color: colors.border)),
             child: Row(children: [
-              Container(width: 56, height: 56, decoration: BoxDecoration(gradient: LinearGradient(colors: [colors.primary, colors.primaryLight]), shape: BoxShape.circle), alignment: Alignment.center, child: Text(user.initials, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 20))),
+              Container(width: 56, height: 56, decoration: BoxDecoration(gradient: LinearGradient(colors: [colors.primary, colors.primaryLight]), shape: BoxShape.circle), alignment: Alignment.center, child: Text(user?.initials ?? '?', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 20))),
               const SizedBox(width: 14),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(user.name, style: AppTextStyles.heading3(context)),
-                Text(user.email, style: AppTextStyles.caption(context)),
+                Text(user?.name ?? 'Guest', style: AppTextStyles.heading3(context)),
+                Text(user?.email ?? '', style: AppTextStyles.caption(context)),
                 const SizedBox(height: 4),
-                Text('Acme Corp · ${user.role.label}', style: AppTextStyles.caption(context).copyWith(color: colors.primary, fontWeight: FontWeight.w600)),
+                Text('${auth.orgName ?? ''} · ${user?.role.label ?? ''}', style: AppTextStyles.caption(context).copyWith(color: colors.primary, fontWeight: FontWeight.w600)),
               ])),
             ]),
           ),
           const SizedBox(height: 20),
           _SettingRow(icon: Icons.dark_mode_outlined, label: 'Dark mode', trailing: Switch(value: Theme.of(context).brightness == Brightness.dark, onChanged: (_) {})),
           _SettingRow(icon: Icons.cloud_off_outlined, label: 'Simulate offline', trailing: Switch(value: false, onChanged: (_) {})),
-          _SettingRow(icon: Icons.bug_report_outlined, label: 'Force error (dev)', trailing: Icon(Icons.chevron_right, color: colors.textHint)),
           const SizedBox(height: 20),
           OutlinedButton.icon(
-            onPressed: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (_) => false),
+            onPressed: () async {
+              await context.read<AuthProvider>().logout();
+              if (context.mounted) {
+                Navigator.of(context).pushNamedAndRemoveUntil('/login', (_) => false);
+              }
+            },
             icon: Icon(Icons.logout_rounded, color: colors.error),
             label: Text('Log out', style: TextStyle(color: colors.error)),
             style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(50), side: BorderSide(color: colors.border)),

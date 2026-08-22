@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/validators.dart';
+import '../../provider/auth_provider.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -33,15 +36,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return null;
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate()) return;
-    Navigator.of(context).pushReplacementNamed('/home'); // UI-only
+    final auth = context.read<AuthProvider>();
+    final ok = await auth.register(_name.text, _email.text, _password.text);
+    if (!mounted) return;
+    if (ok) {
+      Navigator.of(context).pushReplacementNamed('/home');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(auth.errorMessage ?? 'Registration failed')));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = ColorManager.of(context);
+    final submitting = context.watch<AuthProvider>().submitting;
     return Scaffold(
       backgroundColor: colors.background,
       body: SafeArea(
@@ -71,7 +82,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     _AuthField(controller: _confirm, label: 'Confirm password', icon: Icons.lock_outline_rounded, obscure: _obscureConfirm, textInputAction: TextInputAction.done, onSubmitted: (_) => _submit(), validator: _validateConfirm,
                         trailing: IconButton(icon: Icon(_obscureConfirm ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: colors.textHint), onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm))),
                     const SizedBox(height: 24),
-                    _PrimaryButton(label: 'Create account', onPressed: _submit),
+                    _PrimaryButton(label: 'Create account', loading: submitting, onPressed: _submit),
                     const SizedBox(height: 16),
                     Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                       Text('Already have an account?', style: AppTextStyles.bodySecondary(context)),
@@ -100,7 +111,6 @@ class _AuthField extends StatelessWidget {
   final ValueChanged<String>? onSubmitted;
   final Widget? trailing;
   const _AuthField({required this.controller, required this.label, required this.icon, this.hint, this.obscure = false, this.keyboardType, this.textInputAction, this.validator, this.onSubmitted, this.trailing});
-
   @override
   Widget build(BuildContext context) {
     final colors = ColorManager.of(context);
@@ -122,17 +132,20 @@ class _AuthField extends StatelessWidget {
 
 class _PrimaryButton extends StatelessWidget {
   final String label;
+  final bool loading;
   final VoidCallback onPressed;
-  const _PrimaryButton({required this.label, required this.onPressed});
+  const _PrimaryButton({required this.label, required this.onPressed, this.loading = false});
   @override
   Widget build(BuildContext context) {
     final colors = ColorManager.of(context);
     return SizedBox(
       height: 52,
       child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(backgroundColor: colors.primary, foregroundColor: Colors.white, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
-        child: Text(label, style: AppTextStyles.button(context)),
+        onPressed: loading ? null : onPressed,
+        style: ElevatedButton.styleFrom(backgroundColor: colors.primary, foregroundColor: Colors.white, disabledBackgroundColor: colors.primary.withValues(alpha: 0.5), elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+        child: loading
+            ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white))
+            : Text(label, style: AppTextStyles.button(context)),
       ),
     );
   }
