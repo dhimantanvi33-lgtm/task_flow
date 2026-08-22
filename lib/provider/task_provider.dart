@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
-
 import '../core/view_state.dart';
 import '../data/repositories/task_repository.dart';
 import '../models/api_errors.dart';
 import '../models/task_model.dart';
+import '../models/user_model.dart';
 import 'auth_provider.dart';
 
 class TaskFilter {
@@ -55,6 +55,7 @@ class TaskProvider extends ChangeNotifier {
   ViewState<List<TaskModel>> state = const ViewState.initial();
   TaskFilter filter = const TaskFilter();
   List<TaskModel> _all = [];
+  List<UserModel> members = [];
 
   List<TaskModel> get allTasks => _all;
 
@@ -67,6 +68,7 @@ class TaskProvider extends ChangeNotifier {
     notifyListeners();
     try {
       await _auth.ensureValidToken();
+      members = await _repo.getOrgMembers(_auth.orgId!);
       _all = await _repo.getTasks(_auth.orgId!, projectId: projectId);
       _apply();
     } on ApiException catch (e) {
@@ -111,6 +113,9 @@ class TaskProvider extends ChangeNotifier {
         priority: priority,
         dueDate: dueDate,
       )));
+
+  Future<String?> editTask(TaskModel original, {String? title, String? description, TaskPriority? priority, DateTime? dueDate}) =>
+      _mutate(() => _repo.updateTask(original.copyWith(title: title, description: description, priority: priority, dueDate: dueDate)));
 
   Future<String?> updateStatus(TaskModel task, TaskStatus status) =>
       _mutate(() => _repo.updateTask(task.copyWith(status: status)));

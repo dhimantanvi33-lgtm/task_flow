@@ -1,5 +1,6 @@
 import '../../models/api_errors.dart';
 import '../../models/task_model.dart';
+import '../../models/user_model.dart';
 import '../data_source/mock_data_source.dart';
 import 'task_repository.dart';
 
@@ -39,4 +40,7 @@ class TaskRepositoryImpl implements TaskRepository {
     }
     return _ds.updateTask(task.copyWith(assigneeId: userId, clearAssignee: userId == null));
   }
+
+  @override
+  Future<List<UserModel>> getOrgMembers(String orgId) => _ds.orgMembers(orgId);
 }

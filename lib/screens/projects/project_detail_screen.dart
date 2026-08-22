@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:task_flow/screens/projects/project_form_screen.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../data/repositories/project_repository.dart';
@@ -12,6 +12,7 @@ import '../../provider/auth_provider.dart';
 import '../../provider/task_provider.dart';
 import '../../widgets/state_view.dart';
 import '../../widgets/task_card.dart';
+import 'project_form_screen.dart';
 
 class ProjectDetailScreen extends StatelessWidget {
   const ProjectDetailScreen({super.key});
@@ -86,6 +87,14 @@ class _Body extends StatelessWidget {
           IconButton(icon: const Icon(Icons.edit_outlined), onPressed: () => _edit(context)),
           if (isAdmin) IconButton(icon: Icon(Icons.delete_outline, color: colors.error), onPressed: () => _delete(context)),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final changed = await Navigator.of(context).pushNamed('/task-form', arguments: project);
+          if (changed == true && context.mounted) context.read<TaskProvider>().load();
+        },
+        backgroundColor: colors.primary,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
       body: RefreshIndicator(
         color: colors.primary,
