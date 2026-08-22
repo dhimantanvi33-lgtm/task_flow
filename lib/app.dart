@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:task_flow/provider/auth_provider.dart';
+import 'package:task_flow/provider/connectivity_provider.dart';
 import 'package:task_flow/screens/auth/splash_screen.dart';
 import 'package:task_flow/screens/tasks/task_details_screen.dart';
 import 'package:task_flow/service/auth_service.dart';
-
 import 'core/theme/app_theme.dart';
 import 'data/data_source/local_storage_data_source.dart';
 import 'data/data_source/mock_data_source.dart';
@@ -49,6 +49,7 @@ class _TaskFlowAppState extends State<TaskFlowApp> {
         Provider<ProjectRepository>.value(value: _projectRepo),
         Provider<TaskRepository>.value(value: _taskRepo),
         ChangeNotifierProvider<AuthProvider>(create: (_) => AuthProvider(_authService)),
+        ChangeNotifierProvider<ConnectivityProvider>(create: (_) => ConnectivityProvider()),
       ],
       child: MaterialApp(
         title: 'TaskFlow',

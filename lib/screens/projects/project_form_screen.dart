@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/validators.dart';
 import '../../models/project_model.dart';
+
+class ProjectFormResult {
+  final String? id; // null => create
+  final String name;
+  final String description;
+  const ProjectFormResult({this.id, required this.name, required this.description});
+}
 
 class ProjectFormScreen extends StatefulWidget {
   const ProjectFormScreen({super.key});
@@ -39,7 +47,11 @@ class _ProjectFormScreenState extends State<ProjectFormScreen> {
 
   void _save() {
     if (!_formKey.currentState!.validate()) return;
-    Navigator.of(context).pop(); // UI-only
+    Navigator.of(context).pop(ProjectFormResult(
+      id: _editing?.id,
+      name: _name.text.trim(),
+      description: _description.text.trim(),
+    ));
   }
 
   @override

@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../provider/connectivity_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 
 class OfflineBanner extends StatelessWidget {
-  final bool visible;
-  const OfflineBanner({super.key, this.visible = false});
+  const OfflineBanner({super.key});
 
   @override
   Widget build(BuildContext context) {
-    if (!visible) return const SizedBox.shrink();
+    final offline = context.watch<ConnectivityProvider>().isOffline;
+    if (!offline) return const SizedBox.shrink();
     final colors = ColorManager.of(context);
     return Container(
       width: double.infinity,
