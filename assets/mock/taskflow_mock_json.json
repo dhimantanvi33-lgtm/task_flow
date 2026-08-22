@@ -1,0 +1,62 @@
+{
+  "organizations": [
+    { "id": "org_a1b2c3", "name": "Nimbus Digital" },
+    { "id": "org_d4e5f6", "name": "Harbor Light Studios" }
+  ],
+
+  "users": [
+    { "id": "usr_ava",    "name": "Ava Thompson", "email": "ava.admin@nimbusdigital.test" },
+    { "id": "usr_marcus", "name": "Marcus Reed",  "email": "marcus.member@nimbusdigital.test" },
+    { "id": "usr_daniel", "name": "Daniel Cho",   "email": "daniel.admin@harborlightstudios.test" },
+    { "id": "usr_elena",  "name": "Elena Ruiz",   "email": "elena.member@harborlightstudios.test" }
+  ],
+
+  "org_members": [
+    { "org_id": "org_a1b2c3", "user_id": "usr_ava",    "role": "org_admin" },
+    { "org_id": "org_a1b2c3", "user_id": "usr_marcus", "role": "member" },
+    { "org_id": "org_d4e5f6", "user_id": "usr_daniel", "role": "org_admin" },
+    { "org_id": "org_d4e5f6", "user_id": "usr_elena",  "role": "member" }
+  ],
+
+  "projects": [
+    { "id": "proj_nb_1", "org_id": "org_a1b2c3", "name": "Website Redesign", "description": "Revamp the marketing site.",     "color": "#4A6CF7", "created_at": "2026-07-01T09:00:00Z" },
+    { "id": "proj_nb_2", "org_id": "org_a1b2c3", "name": "Mobile App",       "description": "Ship the customer mobile app.",   "color": "#22C55E", "created_at": "2026-07-10T09:00:00Z" },
+    { "id": "proj_hl_1", "org_id": "org_d4e5f6", "name": "Brand Refresh",    "description": "New visual identity system.",     "color": "#F59E0B", "created_at": "2026-06-20T09:00:00Z" }
+  ],
+
+  "tasks": [
+    { "id": "task_nb_1", "project_id": "proj_nb_1", "org_id": "org_a1b2c3", "title": "Review homepage wireframes", "description": "Check spacing and hierarchy across breakpoints.", "status": "todo",        "priority": "high",   "assignee_id": "usr_marcus", "due_date": "2026-08-22", "created_at": "2026-08-15T09:00:00Z" },
+    { "id": "task_nb_2", "project_id": "proj_nb_1", "org_id": "org_a1b2c3", "title": "Finalize color tokens",      "description": "Lock the light/dark palette.",                    "status": "in_progress", "priority": "medium", "assignee_id": "usr_ava",    "due_date": "2026-08-25", "created_at": "2026-08-16T09:00:00Z" },
+    { "id": "task_nb_3", "project_id": "proj_nb_2", "org_id": "org_a1b2c3", "title": "Fix login validation bug",   "description": "Email regex too strict for plus-addressing.",     "status": "todo",        "priority": "high",   "assignee_id": "usr_marcus", "due_date": "2026-08-20", "created_at": "2026-08-14T09:00:00Z" },
+    { "id": "task_nb_4", "project_id": "proj_nb_2", "org_id": "org_a1b2c3", "title": "Set up CI pipeline",         "description": "GitHub Actions for build + test.",                "status": "done",        "priority": "low",    "assignee_id": "usr_ava",    "due_date": "2026-08-18", "created_at": "2026-08-12T09:00:00Z" },
+    { "id": "task_hl_1", "project_id": "proj_hl_1", "org_id": "org_d4e5f6", "title": "Draft logo concepts",        "description": "Three directions for client review.",             "status": "in_progress", "priority": "high",   "assignee_id": "usr_elena",  "due_date": "2026-08-22", "created_at": "2026-08-15T09:00:00Z" },
+    { "id": "task_hl_2", "project_id": "proj_hl_1", "org_id": "org_d4e5f6", "title": "Client review meeting",      "description": "Present concepts and gather feedback.",           "status": "todo",        "priority": "medium", "assignee_id": null,         "due_date": "2026-08-27", "created_at": "2026-08-16T09:00:00Z" }
+  ],
+
+  "comments": [
+    { "id": "cmt_1", "task_id": "task_nb_1", "author_id": "usr_ava",    "body": "Please check the mobile breakpoints too.", "created_at": "2026-08-19T10:00:00Z" },
+    { "id": "cmt_2", "task_id": "task_nb_3", "author_id": "usr_marcus", "body": "Reproduced with plus-addressing emails.",  "created_at": "2026-08-20T09:30:00Z" }
+  ],
+
+  "notifications": [
+    { "id": "ntf_1", "user_id": "usr_marcus", "task_id": "task_nb_1", "type": "task_assigned", "message": "You were assigned: Review homepage wireframes", "is_read": false, "created_at": "2026-08-19T08:00:00Z" },
+    { "id": "ntf_2", "user_id": "usr_elena",  "task_id": "task_hl_1", "type": "task_assigned", "message": "You were assigned: Draft logo concepts",        "is_read": false, "created_at": "2026-08-19T08:05:00Z" },
+    { "id": "ntf_3", "user_id": "usr_ava",    "task_id": "task_nb_2", "type": "status_changed", "message": "Finalize color tokens moved to In Progress",  "is_read": true,  "created_at": "2026-08-18T14:20:00Z" }
+  ],
+
+  "auth_mock": {
+    "_comment": "Use this to simulate the login endpoint locally. Match email+password, return the mock_login_response below. No real network call or backend is required.",
+    "test_credentials": [
+      { "email": "ava.admin@nimbusdigital.test",         "password": "Password123!", "org_id": "org_a1b2c3", "role": "org_admin" },
+      { "email": "marcus.member@nimbusdigital.test",     "password": "Password123!", "org_id": "org_a1b2c3", "role": "member" },
+      { "email": "daniel.admin@harborlightstudios.test", "password": "Password123!", "org_id": "org_d4e5f6", "role": "org_admin" },
+      { "email": "elena.member@harborlightstudios.test", "password": "Password123!", "org_id": "org_d4e5f6", "role": "member" }
+    ],
+    "mock_login_response": {
+      "access_token": "mock.access.token.short_lived",
+      "refresh_token": "mock.refresh.token.long_lived",
+      "access_token_expires_in_seconds": 900,
+      "refresh_token_expires_in_seconds": 604800
+    }
+  }
+}
